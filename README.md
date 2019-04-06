@@ -5,8 +5,11 @@ Licensed under GPLv3 or later.
 
 /!\ Currently under development, some features have not been implemented yet. Only GNU/Linux is supported at the moment (although it might work on macOS).
 
-![screenshot](https://github.com/nastys/waifu2x-qtgui/raw/master/screenshot.png)
+[![screenshot](https://github.com/nastys/waifu2x-qtgui/raw/master/screenshot.png)
+Demo video](https://www.youtube.com/watch?v=8WbIJI7ifCY)
+
 (Hatsune Miku character by Piapro, licensed under CC BY-NC)
+
 
 # Building [waifu2x-converter-cpp](https://github.com/DeadSix27/waifu2x-converter-cpp) (Linux Mint/Ubuntu/Debian)
 If you have an NVIDIA GPU, install [CUDA](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu).
