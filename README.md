@@ -3,7 +3,7 @@ Qt GUI for waifu2x-converter-cpp
 
 Licensed under GPLv3 or later.
 
-/!\ Currently under development, some features have not been implemented yet.
+/!\ Currently under development, some features have not been implemented yet. Only GNU/Linux is supported at the moment (although it might work on macOS).
 
 ![screenshot](https://github.com/nastys/waifu2x-qtgui/raw/master/screenshot.png)
 (Hatsune Miku character by Piapro, licensed under CC BY-NC)
