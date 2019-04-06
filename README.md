@@ -1,5 +1,6 @@
 # waifu2x-qtgui
 Qt GUI for waifu2x-converter-cpp
+
 Licensed under GPLv3 or later.
 
 /!\ Currently under development, some features have not been implemented yet.
