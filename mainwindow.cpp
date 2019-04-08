@@ -60,6 +60,7 @@ void MainWindow::loadimg(QString file, QLabel *frame, double *zoom, QLabel *zoom
 {
     frame->setScaledContents(0);
     frame->setPixmap(QPixmap::fromImage(QImage(file)));
+    frame->setFixedSize(frame->pixmap()->size());
     *zoom=1.0;
     zoomlevel->setText("1x");
     zoomin->setEnabled(1);
@@ -69,6 +70,12 @@ void MainWindow::loadimg(QString file, QLabel *frame, double *zoom, QLabel *zoom
 void MainWindow::unloadimg()
 {
     ui->pic_r->clear();
+    ui->pic_r->setScaledContents(0);
+    ui->pic_r->setFixedSize(0, 0);
+    zoom_r=1.0;
+    ui->zoom_r->setText("1x");
+    ui->r_zoomin->setEnabled(1);
+    ui->r_zoomout->setEnabled(1);
 }
 
 bool MainWindow::isOutImgLoaded()
@@ -526,5 +533,5 @@ void MainWindow::on_r_zoomin_clicked()
 
 void MainWindow::on_r_zoomout_clicked()
 {
-    zoomout(&zoom_r, ui->pic_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+    zoomout(&zoom_r, ui->pic_r, ui->zoom_r, ui->r_zoomin, ui->r_zoomout);
 }

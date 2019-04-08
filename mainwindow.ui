@@ -24,8 +24,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>850</height>
+    <width>800</width>
+    <height>614</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -109,15 +109,6 @@
        </item>
        <item row="0" column="1" colspan="3">
         <widget class="QScrollArea" name="scrollArea_r">
-         <property name="styleSheet">
-          <string notr="true">background-image: url(:/images/res/checkerboard.png);</string>
-         </property>
-         <property name="verticalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
-         </property>
-         <property name="horizontalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
-         </property>
          <property name="sizeAdjustPolicy">
           <enum>QAbstractScrollArea::AdjustToContents</enum>
          </property>
@@ -129,9 +120,12 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>456</width>
-            <height>658</height>
+            <width>256</width>
+            <height>422</height>
            </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-image: url(:/images/res/checkerboard.png);</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
            <property name="leftMargin">
@@ -780,15 +774,6 @@
        </item>
        <item row="0" column="0" colspan="3">
         <widget class="QScrollArea" name="scrollArea_l">
-         <property name="styleSheet">
-          <string notr="true">background-image: url(:/images/res/checkerboard.png);</string>
-         </property>
-         <property name="verticalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
-         </property>
-         <property name="horizontalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
-         </property>
          <property name="sizeAdjustPolicy">
           <enum>QAbstractScrollArea::AdjustToContents</enum>
          </property>
@@ -800,9 +785,12 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>456</width>
-            <height>658</height>
+            <width>256</width>
+            <height>422</height>
            </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-image: url(:/images/res/checkerboard.png);</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
            <property name="leftMargin">
@@ -888,7 +876,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
+     <width>800</width>
      <height>22</height>
     </rect>
    </property>
