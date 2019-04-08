@@ -24,14 +24,13 @@
 #include <QMessageBox>
 #include <QClipboard>
 #include <QMimeData>
-#include <QGraphicsScene>
-#include <QGraphicsSceneContextMenuEvent>
-#include <QGraphicsPixmapItem>
 #include <QPluginLoader>
+#include <QScroller>
+#include <QDragEnterEvent>
 
 QString extension=".png", tmpimg="/tmp/waifu2x", tmpclipboard="/tmp/waifu2x-paste.png";
 QStringList log, imagemagick_filters;
-QGraphicsScene *scenel, *scener;
+double zoom_l=1, zoom_r=1;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -42,10 +41,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget_Quality->setVisible(0);
     ui->imagemagick->setVisible(0);
     ui->statusBar->showMessage("Ready.", 5000);
-    scenel=new QGraphicsScene;
-    scener=new QGraphicsScene;
-    ui->graphicsView->setScene(scenel);
-    ui->graphicsView_2->setScene(scener);
+    QScrollerProperties scroller_properties = QScroller::scroller(ui->scrollArea_l)->scrollerProperties();
+    QVariant no_overshoot = QVariant::fromValue<QScrollerProperties::OvershootPolicy>(QScrollerProperties::OvershootAlwaysOff);
+    scroller_properties.setScrollMetric(QScrollerProperties::VerticalOvershootPolicy, no_overshoot);
+    scroller_properties.setScrollMetric(QScrollerProperties::HorizontalOvershootPolicy, no_overshoot);
+    QScroller::scroller(ui->scrollArea_l)->setScrollerProperties(scroller_properties);
+    QScroller::grabGesture(ui->scrollArea_l, QScroller::LeftMouseButtonGesture);
+    QScroller::scroller(ui->scrollArea_r)->setScrollerProperties(scroller_properties);
+    QScroller::grabGesture(ui->scrollArea_r, QScroller::LeftMouseButtonGesture);
 }
 
 MainWindow::~MainWindow()
@@ -53,12 +56,19 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::loadimg(QString file, QGraphicsScene *scene)
+void MainWindow::loadimg(QString file, QLabel *frame, double *zoom, QLabel *zoomlevel, QPushButton *zoomin, QPushButton *zoomout)
 {
-    QGraphicsPixmapItem *item=new QGraphicsPixmapItem(QPixmap::fromImage(QImage(file)));
-    scene->clear();
-    // not implemented: restore size
-    scene->addItem(item);
+    frame->setScaledContents(0);
+    frame->setPixmap(QPixmap::fromImage(QImage(file)));
+    *zoom=1.0;
+    zoomlevel->setText("1x");
+    zoomin->setEnabled(1);
+    zoomout->setEnabled(1);
+}
+
+void MainWindow::unloadimg()
+{
+    ui->pic_r->clear();
 }
 
 bool MainWindow::isOutImgLoaded()
@@ -79,7 +89,8 @@ void MainWindow::on_actionOpen_triggered()
         return;
 
     ui->lineEdit->setText(file_open);
-    loadimg(file_open, scenel);
+    unloadimg();
+    loadimg(file_open, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
     on_doubleSpinBox_valueChanged();
 }
 
@@ -112,7 +123,7 @@ void MainWindow::upscale()
     }
     proc.setArguments(args);
     proc.start();
-    proc.waitForFinished();
+    proc.waitForFinished(-1);
     log<<"Arguments: "+args.join(" ")+"\n"<<proc.readAll()<<"-----------------------\n";
 }
 
@@ -191,7 +202,18 @@ void MainWindow::on_pushButton_Resize_clicked()
     ui->frame_2->setEnabled(0);
     ui->mainToolBar->setEnabled(0);
     ui->menuBar->setEnabled(0);
+    ui->pushButton->setEnabled(0);
+    ui->pushButton_2->setEnabled(0);
+    ui->pushButton_3->setEnabled(0);
+    ui->pushButton_4->setEnabled(0);
+    ui->lineEdit->setEnabled(0);
+    ui->l_zoomin->setEnabled(0);
+    ui->l_zoomout->setEnabled(0);
+    ui->r_zoomin->setEnabled(0);
+    ui->r_zoomout->setEnabled(0);
+    MainWindow::setAcceptDrops(0);
     statusBar()->showMessage("Resizing...");
+    MainWindow::repaint();
 
     if (!(ui->doubleSpinBox->value() > 0.0))
     {
@@ -201,13 +223,23 @@ void MainWindow::on_pushButton_Resize_clicked()
 
     upscale();
     if (QFile::exists(tmpimg+extension))
-        loadimg(tmpimg+extension, scener);
+        loadimg(tmpimg+extension, ui->pic_r, &zoom_r, ui->zoom_r, ui->r_zoomin, ui->r_zoomout);
     else
         QMessageBox::critical(this, "Log", log.join("\n"));
 
     ui->frame_2->setEnabled(1);
     ui->mainToolBar->setEnabled(1);
     ui->menuBar->setEnabled(1);
+    ui->pushButton->setEnabled(1);
+    ui->pushButton_2->setEnabled(1);
+    ui->pushButton_3->setEnabled(1);
+    ui->pushButton_4->setEnabled(1);
+    ui->lineEdit->setEnabled(1);
+    ui->l_zoomin->setEnabled(1);
+    ui->l_zoomout->setEnabled(1);
+    ui->r_zoomin->setEnabled(1);
+    ui->r_zoomout->setEnabled(1);
+    MainWindow::setAcceptDrops(1);
     statusBar()->showMessage("Done.", 5000);
 }
 
@@ -270,7 +302,7 @@ void MainWindow::on_actionPaste_input_triggered()
             outfile.close();
 
             ui->lineEdit->setText(tmpclipboard);
-            loadimg(tmpclipboard, scenel);
+            loadimg(tmpclipboard, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
         }
         else
         {
@@ -314,7 +346,34 @@ void MainWindow::on_pushButton_4_clicked()
 
 void MainWindow::on_actionSave_as_triggered()
 {
-    // not implemented
+    if (ui->pic_r->pixmap()==0 && QFile::exists(tmpimg+extension))
+    {
+        int savelast=QMessageBox::question(this, "", "No image loaded.\nWould you like to save the last temporary file in the currently selected format? ("+extension+")");
+        if (savelast==QMessageBox::No)
+            return;
+    }
+    else if (ui->pic_r->pixmap()==0 || QFile::exists(tmpimg+extension)==false)
+    {
+        QMessageBox::warning(this, "", "Nothing to save.");
+        return;
+    }
+    else if (QFile::exists(tmpimg+extension)==false)
+    {
+        QMessageBox::warning(this, "", "The temporary file is missing, cannot save.");
+        return;
+    }
+
+    QString file_save=QFileDialog::getSaveFileName(this, "Save image...", "", "*"+extension);
+    if (file_save.isEmpty())
+        return;
+
+    if(file_save.endsWith(extension)==false)
+        file_save.append(extension);
+
+    if (QFile::copy(tmpimg+extension, file_save))
+        ui->statusBar->showMessage("File saved.", 5000);
+    else
+        QMessageBox::warning(this, "", "Could not save the image.");
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -384,4 +443,88 @@ void MainWindow::on_scaler_activated(int index)
             ui->widget_Denoise->setVisible(1);
             ui->toolBox->addItem(ui->page_3,"Processor");
     }
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    QString filename=event->mimeData()->urls().at(0).toLocalFile();
+    ui->lineEdit->setText(filename);
+    unloadimg();
+    loadimg(filename, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+    on_doubleSpinBox_valueChanged();
+}
+
+void MainWindow::zoomin(double *zoom, QLabel *pic, QLabel *zoomlabel, QPushButton *zoomin, QPushButton *zoomout)
+{
+    if (*zoom==4.0 || pic->pixmap()==0)
+        return;
+
+    if (*zoom>=1.0)
+        *zoom=*zoom+1;
+    else
+        *zoom=*zoom+0.25;
+
+    if (*zoom==1.0)
+        pic->setScaledContents(0);
+    else
+        pic->setScaledContents(1);
+
+    pic->setFixedSize(pic->pixmap()->size()*(*zoom));
+    zoomlabel->setText(QString::number(*zoom)+"x");
+
+    if (*zoom==4.0)
+        zoomin->setEnabled(0);
+
+    zoomout->setEnabled(1);
+}
+
+void MainWindow::zoomout(double *zoom, QLabel *pic, QLabel *zoomlabel, QPushButton *zoomin, QPushButton *zoomout)
+{
+    if (*zoom==0.25 || pic->pixmap()==0)
+        return;
+
+    if (*zoom>=2.0)
+        *zoom=*zoom-1;
+    else
+        *zoom=*zoom-0.25;
+
+    if (*zoom==1.0)
+        pic->setScaledContents(0);
+    else
+        pic->setScaledContents(1);
+
+    pic->setFixedSize(pic->pixmap()->size()*(*zoom));
+    zoomlabel->setText(QString::number(*zoom)+"x");
+
+    if (*zoom==0.25)
+        zoomout->setEnabled(0);
+
+    zoomin->setEnabled(1);
+}
+
+void MainWindow::on_l_zoomin_clicked()
+{
+    zoomin(&zoom_l, ui->pic_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+}
+
+void MainWindow::on_l_zoomout_clicked()
+{
+    zoomout(&zoom_l, ui->pic_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+}
+
+void MainWindow::on_r_zoomin_clicked()
+{
+    zoomin(&zoom_r, ui->pic_r, ui->zoom_r, ui->r_zoomin, ui->r_zoomout);
+}
+
+void MainWindow::on_r_zoomout_clicked()
+{
+    zoomout(&zoom_r, ui->pic_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
 }

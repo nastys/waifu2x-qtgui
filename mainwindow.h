@@ -22,6 +22,8 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QGraphicsScene>
+#include <QDragEnterEvent>
+#include <QPushButton>
 
 namespace Ui {
 class MainWindow;
@@ -36,7 +38,9 @@ public:
     ~MainWindow();
 
 private:
-    void loadimg(QString file, QGraphicsScene *scene);
+    void loadimg(QString file, QLabel *frame, double *zoom, QLabel *zoomlevel, QPushButton *zoomin, QPushButton *zoomout);
+
+    void unloadimg();
 
     bool isOutImgLoaded();
 
@@ -61,6 +65,15 @@ private:
     int getBlockSize();
 
     void imagemagickFilters();
+
+    void zoomin(double *zoom, QLabel *pic, QLabel *zoomlabel, QPushButton *zoomin, QPushButton *zoomout);
+
+    void zoomout(double *zoom, QLabel *pic, QLabel *zoomlabel, QPushButton *zoomin, QPushButton *zoomout);
+
+protected:
+    void dragEnterEvent(QDragEnterEvent *event);
+
+    void dropEvent(QDropEvent *event);
 
 private slots:
     void on_actionExit_triggered() __attribute__ ((noreturn));
@@ -102,6 +115,14 @@ private slots:
     void on_actionAbout_Qt_triggered();
 
     void on_scaler_activated(int index);
+
+    void on_l_zoomin_clicked();
+
+    void on_l_zoomout_clicked();
+
+    void on_r_zoomin_clicked();
+
+    void on_r_zoomout_clicked();
 
 private:
     Ui::MainWindow *ui;
