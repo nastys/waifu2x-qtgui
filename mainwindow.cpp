@@ -27,8 +27,9 @@
 #include <QPluginLoader>
 #include <QScroller>
 #include <QDragEnterEvent>
+#include <QTextStream>
 
-QString extension=".png", tmpimg="/tmp/waifu2x", tmpclipboard="/tmp/waifu2x-paste.png";
+QString extension=".png", tmpimg="/tmp/waifu2x-qtgui", tmpclipboard="/tmp/waifu2x-qtgui-paste.png";
 QStringList log, imagemagick_filters;
 double zoom_l=1, zoom_r=1;
 
@@ -49,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QScroller::grabGesture(ui->scrollArea_l, QScroller::LeftMouseButtonGesture);
     QScroller::scroller(ui->scrollArea_r)->setScrollerProperties(scroller_properties);
     QScroller::grabGesture(ui->scrollArea_r, QScroller::LeftMouseButtonGesture);
+    listProcessors();
 }
 
 MainWindow::~MainWindow()
@@ -65,6 +67,9 @@ void MainWindow::loadimg(QString file, QLabel *frame, double *zoom, QLabel *zoom
     zoomlevel->setText("1x");
     zoomin->setEnabled(1);
     zoomout->setEnabled(1);
+    on_doubleSpinBox_valueChanged();
+    ui->actionUpscale->setEnabled(1);
+    ui->pushButton_Resize->setEnabled(1);
 }
 
 void MainWindow::unloadimg()
@@ -80,8 +85,7 @@ void MainWindow::unloadimg()
 
 bool MainWindow::isOutImgLoaded()
 {
-    // not implemented
-    return 1;
+    return !(ui->pic_r->pixmap()==0);
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -98,7 +102,6 @@ void MainWindow::on_actionOpen_triggered()
     ui->lineEdit->setText(file_open);
     unloadimg();
     loadimg(file_open, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
-    on_doubleSpinBox_valueChanged();
 }
 
 void MainWindow::upscale()
@@ -109,22 +112,26 @@ void MainWindow::upscale()
     if (ui->scaler->currentIndex())
     {
         args<<ui->lineEdit->text()<<"-filter"<<ui->imagemagick->currentText()<<"-resize"<<QString::number(ui->doubleSpinBox->value()*100)+"%"<<tmpimg+extension;
-        // compression/quality not implemented
+        if (ui->widget_Compression->isVisible())
+            args<<"-define png:compression-level="+QString::number(ui->compression->value()); // PNG
+        if (ui->widget_Quality->isVisible())
+            args<<"-quality"<<QString::number(ui->quality->value());
         proc.setProgram("convert");
     }
     else
     {
         args<<"-i"<<ui->lineEdit->text()<<"-o"<<tmpimg+extension;
         // model not implemented
-        // processor not implemented
-        // compression/quality not implemented
+        args<<"-p"<<ui->processor->currentText().at(0);
+        if (ui->widget_Compression->isVisible())
+            args<<"-c"<<QString::number(ui->compression->value());
+        if (ui->widget_Quality->isVisible())
+            args<<"-q"<<QString::number(ui->quality->value());
         args<<"-m"<<getMode(); // mode
         args<<"--scale-ratio"<<QString::number(ui->doubleSpinBox->value()); // scale
         args<<"--noise-level"<<getNoiseReductionLevel(); // noise reduction level
         if (getJobs()>0) args<<"-j"<<QString::number(getJobs()); // jobs
         if (getBlockSize()>0) args<<"--block-size"<<QString::number(getBlockSize()); // block size
-        if (getDisableGPU()) args<<"--disable-gpu";
-        if (getForceOCL()) args<<"--force-OpenCL";
 
         proc.setProgram("waifu2x-converter-cpp");
     }
@@ -157,25 +164,21 @@ QString MainWindow::getNoiseReductionLevel()
     return(QString::number(ui->noiseReduction->value()));
 }
 
-QStringList MainWindow::listProcessors()
+void MainWindow::listProcessors()
 {
-    // not implemented
-    return(QStringList({"Default"}));
+    QProcess process;
+    QStringList processors;
+    process.setProgram("waifu2x-converter-cpp");
+    process.setArguments({"-l"});
+    process.start();
+    process.waitForFinished(10000);
+    processors<<QString(process.readAllStandardOutput()).remove(0, 3).split("\n   ");
+    ui->processor->addItems(processors);
 }
 
 int MainWindow::getProcessor()
 {
     return(ui->processor->currentIndex());
-}
-
-bool MainWindow::getDisableGPU()
-{
-    return(ui->disableGPU->isChecked());
-}
-
-bool MainWindow::getForceOCL()
-{
-    return(ui->forceOCL->isChecked());
 }
 
 int MainWindow::getJobs()
@@ -292,7 +295,25 @@ void MainWindow::on_actionClear_triggered()
 
 void MainWindow::on_action_Export_triggered()
 {
-    // not implemented
+    QString file_save=QFileDialog::getSaveFileName(this, "Save log as...", "", "*.txt");
+    if (file_save.isEmpty())
+        return;
+
+    if(file_save.endsWith(".txt")==false)
+        file_save.append(".txt");
+
+    QFile logfile(file_save);
+    logfile.remove();
+    if (logfile.open(QIODevice::ReadWrite)==0)
+        QMessageBox::warning(this, "", "Could not save the log.");
+    else
+    {
+        QTextStream stream(&logfile);
+        stream<<log.join("\n");
+        ui->statusBar->showMessage("Log saved.", 5000);
+    }
+
+    logfile.close();
 }
 
 void MainWindow::on_actionPaste_input_triggered()
@@ -353,13 +374,13 @@ void MainWindow::on_pushButton_4_clicked()
 
 void MainWindow::on_actionSave_as_triggered()
 {
-    if (ui->pic_r->pixmap()==0 && QFile::exists(tmpimg+extension))
+    if (!isOutImgLoaded() && QFile::exists(tmpimg+extension))
     {
         int savelast=QMessageBox::question(this, "", "No image loaded.\nWould you like to save the last temporary file in the currently selected format? ("+extension+")");
         if (savelast==QMessageBox::No)
             return;
     }
-    else if (ui->pic_r->pixmap()==0 || QFile::exists(tmpimg+extension)==false)
+    else if (!isOutImgLoaded() || QFile::exists(tmpimg+extension)==false)
     {
         QMessageBox::warning(this, "", "Nothing to save.");
         return;
@@ -465,7 +486,6 @@ void MainWindow::dropEvent(QDropEvent *event)
     ui->lineEdit->setText(filename);
     unloadimg();
     loadimg(filename, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
-    on_doubleSpinBox_valueChanged();
 }
 
 void MainWindow::zoomin(double *zoom, QLabel *pic, QLabel *zoomlabel, QPushButton *zoomin, QPushButton *zoomout)

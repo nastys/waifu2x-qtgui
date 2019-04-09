@@ -52,7 +52,7 @@ private:
 
     QString getNoiseReductionLevel();
 
-    QStringList listProcessors();
+    void listProcessors();
 
     int getProcessor();
 

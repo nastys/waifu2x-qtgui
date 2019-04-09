@@ -573,6 +573,9 @@
               </item>
               <item>
                <widget class="QSpinBox" name="quality">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
                 <property name="maximum">
                  <number>100</number>
                 </property>
@@ -620,20 +623,6 @@
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
             <widget class="QComboBox" name="processor"/>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="disableGPU">
-             <property name="text">
-              <string>Disable GPU</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="forceOCL">
-             <property name="text">
-              <string>Force OpenCL on Intel</string>
-             </property>
-            </widget>
            </item>
            <item>
             <widget class="QWidget" name="widget" native="true">
@@ -692,6 +681,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_Resize">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -976,6 +968,9 @@
    </property>
   </action>
   <action name="actionUpscale">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset theme="image-denoise">
      <normaloff>.</normaloff>.</iconset>
@@ -984,7 +979,7 @@
     <string>Resi&amp;ze</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+A</string>
+    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="action_View">
@@ -1015,6 +1010,9 @@
    </property>
    <property name="text">
     <string>&amp;Export...</string>
+   </property>
+   <property name="toolTip">
+    <string>Save log as...</string>
    </property>
   </action>
   <action name="actionCopy_output">
@@ -1077,8 +1075,6 @@
   <tabstop>compression</tabstop>
   <tabstop>quality</tabstop>
   <tabstop>processor</tabstop>
-  <tabstop>disableGPU</tabstop>
-  <tabstop>forceOCL</tabstop>
   <tabstop>jobs</tabstop>
   <tabstop>blockSize</tabstop>
   <tabstop>pushButton_Resize</tabstop>
