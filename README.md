@@ -3,7 +3,7 @@ Qt GUI for [waifu2x-converter-cpp](https://github.com/DeadSix27/waifu2x-converte
 
 License: GNU General Public License v3.0 or later.
 
-/!\ Currently under development, some features have not been implemented yet. Only GNU/Linux is supported at the moment (although it might work on macOS).
+/!\ Currently under development, some features have not been implemented yet. Only tested on GNU/Linux (at the moment). It should work on macOS and Windows as long as waifu2x-converter-cpp is in your PATH. On Windows, make sure there are no spaces in any path.
 
 [![screenshot](https://github.com/nastys/waifu2x-qtgui/raw/master/screenshot.png)
 Demo video](https://www.youtube.com/watch?v=8WbIJI7ifCY)

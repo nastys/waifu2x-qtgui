@@ -29,7 +29,7 @@
 #include <QDragEnterEvent>
 #include <QTextStream>
 
-QString extension=".png", tmpimg="/tmp/waifu2x-qtgui", tmpclipboard="/tmp/waifu2x-qtgui-paste.png";
+QString extension=".png", tmpimg=QDir::tempPath()+"/waifu2x-qtgui", tmpclipboard=QDir::tempPath()+"/waifu2x-qtgui-paste.png";
 QStringList log, imagemagick_filters;
 double zoom_l=1, zoom_r=1;
 
