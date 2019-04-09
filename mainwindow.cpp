@@ -111,11 +111,15 @@ void MainWindow::upscale()
     QProcess proc;
     if (ui->scaler->currentIndex())
     {
-        args<<ui->lineEdit->text()<<"-filter"<<ui->imagemagick->currentText()<<"-resize"<<QString::number(ui->doubleSpinBox->value()*100)+"%"<<tmpimg+extension;
+        args<<ui->lineEdit->text()<<"-filter"<<ui->imagemagick->currentText()<<"-resize"<<QString::number(ui->doubleSpinBox->value()*100)+"%";
+        int c_index=ui->toolBox->currentIndex();
+        ui->toolBox->setCurrentIndex(1);
         if (ui->widget_Compression->isVisible())
-            args<<"-define png:compression-level="+QString::number(ui->compression->value()); // PNG
+            args<<"-define"<<"png:compression-level="+QString::number(ui->compression->value()); // PNG
         if (ui->widget_Quality->isVisible())
             args<<"-quality"<<QString::number(ui->quality->value());
+        ui->toolBox->setCurrentIndex(c_index);
+        args<<tmpimg+extension;
         proc.setProgram("convert");
     }
     else
@@ -123,10 +127,13 @@ void MainWindow::upscale()
         args<<"-i"<<ui->lineEdit->text()<<"-o"<<tmpimg+extension;
         // model not implemented
         args<<"-p"<<ui->processor->currentText().at(0);
+        int c_index=ui->toolBox->currentIndex();
+        ui->toolBox->setCurrentIndex(1);
         if (ui->widget_Compression->isVisible())
             args<<"-c"<<QString::number(ui->compression->value());
         if (ui->widget_Quality->isVisible())
             args<<"-q"<<QString::number(ui->quality->value());
+        ui->toolBox->setCurrentIndex(c_index);
         args<<"-m"<<getMode(); // mode
         args<<"--scale-ratio"<<QString::number(ui->doubleSpinBox->value()); // scale
         args<<"--noise-level"<<getNoiseReductionLevel(); // noise reduction level
