@@ -42,6 +42,8 @@ private:
 
     void unloadimg();
 
+    void parseCommandLine();
+
     bool isOutImgLoaded();
 
     void upscale();

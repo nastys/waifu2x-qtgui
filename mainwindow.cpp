@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QScroller::scroller(ui->scrollArea_r)->setScrollerProperties(scroller_properties);
     QScroller::grabGesture(ui->scrollArea_r, QScroller::LeftMouseButtonGesture);
     listProcessors();
+    parseCommandLine();
 }
 
 MainWindow::~MainWindow()
@@ -68,8 +69,6 @@ void MainWindow::loadimg(QString file, QLabel *frame, double *zoom, QLabel *zoom
     zoomin->setEnabled(1);
     zoomout->setEnabled(1);
     on_doubleSpinBox_valueChanged();
-    ui->actionUpscale->setEnabled(1);
-    ui->pushButton_Resize->setEnabled(1);
 }
 
 void MainWindow::unloadimg()
@@ -81,6 +80,18 @@ void MainWindow::unloadimg()
     ui->zoom_r->setText("1x");
     ui->r_zoomin->setEnabled(1);
     ui->r_zoomout->setEnabled(1);
+}
+
+void MainWindow::parseCommandLine()
+{
+    if (QCoreApplication::arguments().size()>=2) if (QFile::exists(QCoreApplication::arguments().at(1)))
+    {
+        ui->lineEdit->setText(QCoreApplication::arguments().at(1));
+        unloadimg();
+        loadimg(QCoreApplication::arguments().at(1), ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+        ui->actionUpscale->setEnabled(1);
+        ui->pushButton_Resize->setEnabled(1);
+    }
 }
 
 bool MainWindow::isOutImgLoaded()
@@ -102,6 +113,8 @@ void MainWindow::on_actionOpen_triggered()
     ui->lineEdit->setText(file_open);
     unloadimg();
     loadimg(file_open, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+    ui->actionUpscale->setEnabled(1);
+    ui->pushButton_Resize->setEnabled(1);
 }
 
 void MainWindow::upscale()
@@ -337,7 +350,10 @@ void MainWindow::on_actionPaste_input_triggered()
             outfile.close();
 
             ui->lineEdit->setText(tmpclipboard);
+            unloadimg();
             loadimg(tmpclipboard, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+            ui->actionUpscale->setEnabled(1);
+            ui->pushButton_Resize->setEnabled(1);
         }
         else
         {
@@ -493,6 +509,8 @@ void MainWindow::dropEvent(QDropEvent *event)
     ui->lineEdit->setText(filename);
     unloadimg();
     loadimg(filename, ui->pic_l, &zoom_l, ui->zoom_l, ui->l_zoomin, ui->l_zoomout);
+    ui->actionUpscale->setEnabled(1);
+    ui->pushButton_Resize->setEnabled(1);
 }
 
 void MainWindow::zoomin(double *zoom, QLabel *pic, QLabel *zoomlabel, QPushButton *zoomin, QPushButton *zoomout)
